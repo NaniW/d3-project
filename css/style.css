@@ -1,0 +1,17 @@
+body {
+  width: 960px;
+  height: 850px;
+}
+
+h1 {
+    font-family: 'Open Sans', sans-serif;
+    font-weight: 900;
+    font-size: 32px;
+    margin-bottom: 20px;
+}
+
+.line {
+  fill: none;
+  stroke: steelblue;
+  stroke-width: 3px;
+}
