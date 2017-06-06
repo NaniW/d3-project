@@ -25,19 +25,35 @@
 
     // parse the time
     var parseTime = d3.timeParse("%-I:%M:%S %p");
+    var formatTime = d3.timeFormat("%H:%M %p");
 
     // set the ranges
     var x = d3.scaleTime().range([0, width]);
     var y = d3.scaleLinear().range([height, 0]);
 
+    // define the area
+    var area = d3.area()
+      .x(function(d) {
+        return x(d.time);
+      })
+      .y0(height)
+      .y1(function(d) {
+        return y(d.total);
+      });
+
     // define the line
     var valueline = d3.line()
+      .curve(d3.curveCardinal)
       .x(function(d) {
         return x(d.time);
       })
       .y(function(d) {
         return y(d.total);
       });
+
+    var div = d3.select("body").append("div")
+      .attr("class", "tooltip")
+      .style("opacity", 0);
 
     // append the svg object to the body of the page
     // appends a 'group' element to 'svg'
@@ -67,26 +83,78 @@
         return d.total;
       })]);
 
+      // set the gradient
+      svg.append("linearGradient")
+        .attr("id", "area-gradient")
+        .attr("gradientUnits", "userSpaceOnUse")
+        .attr("x1", 0).attr("y1", y(0))
+        .attr("x2", 0).attr("y2", y(100))
+        .selectAll("stop")
+        .data([{
+            offset: "0%",
+            color: "#ccffff"
+          },
+          {
+            offset: "20%",
+            color: "#ccffff"
+          },
+          {
+            offset: "40%",
+            color: "#3399ff"
+          },
+          {
+            offset: "60%",
+            color: "#3399ff"
+          },
+          {
+            offset: "80%",
+            color: "#0000cc"
+          },
+          {
+            offset: "100%",
+            color: "#0000cc"
+          }
+        ])
+        .enter().append("stop")
+        .attr("offset", function(d) {
+          return d.offset;
+        })
+        .attr("stop-color", function(d) {
+          return d.color;
+        });
+
+      // add the area
+      svg.append("path")
+        .data([data])
+        .attr("class", "area")
+        .attr("d", area);
+
       // Add the valueline path
       svg.append("path")
         .data([data])
         .attr("class", "line")
         .attr("d", valueline);
 
-      // Add the scatterplot
+      // // add the dots with tooltips
       svg.selectAll("dot")
         .data(data)
         .enter().append("circle")
-        .filter(function(d) {
-          return d.total < 400
-        }) // <== This line
-        .style("fill", "red") // <== and this one
+        .style("fill", "red")
         .attr("r", 4)
         .attr("cx", function(d) {
           return x(d.time);
         })
         .attr("cy", function(d) {
           return y(d.total);
+        })
+        .on("mouseover", function(d) {
+          div.transition()
+            .duration(200)
+            .style("opacity", .9);
+          div.html(
+              formatTime(d.time) + "<br/>" + d.total)
+            .style("left", (d3.event.pageX) + "px")
+            .style("top", (d3.event.pageY - 28) + "px");
         });
 
       // Add the X Axis
@@ -97,7 +165,7 @@
       // Add the Y Axis
       svg.append("g")
         .call(d3.axisLeft(y));
-
     });
   </script>
+
 </body>
